@@ -1,0 +1,100 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load adjust_for_pagination %}
+
+{% block title %}
+Pre-processing
+{% endblock %}
+
+{% block extrahead %}
+<script type="text/javascript" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card mb-4">
+        <div class="card-header pb-0">
+          <h6>Data Indeks Kerukunan Umat Beragama</h6>
+        </div>
+        {% if form_errors %}
+          <p>Found errors on line {{ row_count }}:<p>
+          <ul>
+          {% for field, errors in form_errors.items %}
+              {% for error in errors %}
+                  <li> {{field}}: {{ error }} </li>
+              {% endfor %}
+          {% endfor %}
+          {% elif row_count %}
+          <p>Successfully uploaded {{ row_count }} row(s)! 🥳</p>
+        {% endif %}
+        <form action="/preprocessing/" enctype="multipart/form-data" method="post" class="mb-3">
+          {% csrf_token %}
+          {{ form }}  
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+        
+        <div class="card-body px-0 pt-0 pb-2">
+          <div class="table-responsive p-0">
+            <table class="table align-items-center mb-0">
+              <thead>
+                <tr>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">No</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Provinsi</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Kabupaten</th>
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Jenis Kelamin</th>
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Usia</th>
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Agama</th>
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Toleransi</th>
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kesetaraan</th>
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kerjasama</th>
+                  <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tahun</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for record in paginated_records %}
+                <tr>
+                  <td class="text-center">{{ forloop.counter|adjust_for_pagination:page }}</td>
+                  <td class="text-center">{{ record.provinsi|remove_quotes }}</td>
+                  <td>{{ record.kabupaten|remove_quotes }}</td>
+                  <td class="text-center">
+                    {% if record.jenis_kelamin == 2 %}
+                      Perempuan
+                    {% else %}
+                      Laki-laki
+                    {% endif %}
+                  </td>
+                  <td class="text-center">{{ record.usia }}</td>
+                  <td class="text-center">{{ record.agama|remove_quotes }}</td>
+                  <td class="text-center">{{ record.toleransi }}</td>
+                  <td class="text-center">{{ record.kesetaraan }}</td>
+                  <td class="text-center">{{ record.kerjasama }}</td>
+                  <td class="text-center">{{ record.tahun }}</td>                  
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="pagination">
+          <span class="step-links">
+              {% if paginated_records.has_previous %}
+                  <a href="?page=1&search={{ search_query }}">&laquo; first</a>
+                  <a href="?page={{ paginated_records.previous_page_number }}&search={{ search_query }}">previous</a>
+              {% endif %}
+              <span class="current">
+                  Page {{ paginated_records.number }} of {{ paginated_records.paginator.num_pages }}.
+              </span>
+              {% if paginated_records.has_next %}
+                  <a href="?page={{ paginated_records.next_page_number }}&search={{ search_query }}">next</a>
+                  <a href="?page={{ paginated_records.paginator.num_pages }}&search={{ search_query }}">last &raquo;</a>
+              {% endif %}
+          </span>
+        </div>    
+      </div>
+    </div>
+  </div>  
+</div>
+{% endblock content %}

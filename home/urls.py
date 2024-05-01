@@ -1,14 +1,11 @@
 from django.urls import path
-from admin_soft import views
+from . import views
 from django.contrib.auth import views as auth_views
-
 
 urlpatterns = [
     path('', views.index, name='index'),
     path('billing/', views.billing, name='billing'),
-    path('tables/', views.tables, name='tables'),
-    path('vr/', views.vr, name='vr'),
-    path('rtl/', views.rtl, name='rtl'),
+    path('preprocessing/', views.Preprocessing.as_view(), name='preprocessing'),
     path('profile/', views.profile, name='profile'),
 
     # Authentication

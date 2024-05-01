@@ -2,8 +2,10 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm, UsernameField, PasswordResetForm, SetPasswordForm
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
+from .models import Kub
+from django.forms import FileField, Form, ModelForm
 
-
+#authentication
 class RegistrationForm(UserCreationForm):
   password1 = forms.CharField(
       label=_("Password"),
@@ -62,3 +64,12 @@ class UserPasswordChangeForm(PasswordChangeForm):
     new_password2 = forms.CharField(max_length=50, widget=forms.PasswordInput(attrs={
         'class': 'form-control', 'placeholder': 'Confirm New Password'
     }), label="Confirm New Password")
+
+#store file
+class KubForm(ModelForm):
+   class Meta:
+      model = Kub
+      fields = ["provinsi","kabupaten","jenis_kelamin","usia","agama","menikah","pendidikan","pekerjaan","kub","toleransi","kesetaraan","kerjasama","tahun"]
+
+class UploadForm(Form):
+   kub_file = FileField()

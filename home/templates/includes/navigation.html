@@ -12,22 +12,18 @@
     </nav>
     <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
       <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-        <div class="input-group">
+        {% if request.path != '/' %}
+        <form method="get" action="{% url 'preprocessing' %}?search={{ search_query }}" class="input-group">
           <span class="input-group-text text-body"><i class="fas fa-search" aria-hidden="true"></i></span>
-          <input type="text" class="form-control" placeholder="Type here...">
-        </div>
+          <input type="text" name="search" class="form-control rounded" value="{{ search_query }}" placeholder="Search...">
+        </form>
+        {% endif %}
       </div>
       <ul class="navbar-nav  justify-content-end">
 
         {% if request.user.is_authenticated %}
           <li class="nav-item d-flex align-items-center">
-
-            {% if request.user.is_superuser %}
-            <a href="{% url 'admin:logout' %}" class="nav-link text-body font-weight-bold px-0">
-            {% else %}
             <a href="{% url 'logout' %}" class="nav-link text-body font-weight-bold px-0">
-            {% endif %}
-            
               <i class="fa fa-user me-sm-1"></i>
               <span class="d-sm-inline d-none me-3">Logout</span>
             </a>
