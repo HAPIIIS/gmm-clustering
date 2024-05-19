@@ -30,11 +30,13 @@ Pre-processing
           {% elif row_count %}
           <p>Successfully uploaded {{ row_count }} row(s)! 🥳</p>
         {% endif %}
-        <form action="/preprocessing/" enctype="multipart/form-data" method="post" class="mb-3">
-          {% csrf_token %}
-          {{ form }}  
-          <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
+        <div class="container d-flex mt-3">
+          <form action="/preprocessing/" enctype="multipart/form-data" method="post" class="mb-3 d-flex align-items-center">
+            {% csrf_token %}
+            {{ form }}
+            <button type="submit" class="btn bg-gradient-dark">Submit</button>
+          </form>
+        </div>
         
         <div class="card-body px-0 pt-0 pb-2">
           <div class="table-responsive p-0">

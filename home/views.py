@@ -10,14 +10,171 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Kub
 import pandas as pd
 from django.db.models import Q
+import numpy as np
+from sklearn.mixture import GaussianMixture
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
+import matplotlib.pyplot as plt
+from io import BytesIO
+import urllib
+import base64
+import seaborn as sns
+import matplotlib
+matplotlib.use('Agg')
 
 
 # Pages
 def index(request):
-  return render(request, 'pages/index.html', { 'segment': 'index' })
+    years = [2021, 2022, 2023]
+    average_values = {'toleransi': [], 'kesetaraan': [], 'kerjasama': []}
+    
+    for year in years:
+        data_year = Kub.objects.filter(tahun=year)
+        
+        if data_year.exists():
+            data_year_df = pd.DataFrame(list(data_year.values_list('provinsi', 'toleransi', 'kesetaraan', 'kerjasama')), columns=['provinsi', 'toleransi', 'kesetaraan', 'kerjasama'])
+            grouped_data = data_year_df.groupby('provinsi').agg({
+                'toleransi': 'mean',
+                'kesetaraan': 'mean',
+                'kerjasama': 'mean'
+            }).reset_index()
+            
+            average_values['toleransi'].append(grouped_data['toleransi'].mean())
+            average_values['kesetaraan'].append(grouped_data['kesetaraan'].mean())
+            average_values['kerjasama'].append(grouped_data['kerjasama'].mean())
 
-def billing(request):
-  return render(request, 'pages/billing.html', { 'segment': 'billing' })
+    return render(request, 'pages/index.html', { 
+        'segment': 'index',
+        'average_values': average_values
+    })
+
+class Cluster(View):
+    def get(self, request, *args, **kwargs):
+        bic_scores_df = self.calculate_bic_scores()
+
+        years = bic_scores_df.columns
+        bic_scores = bic_scores_df.values.T
+
+        plt.figure(figsize=(5, 4))
+        for i, year in enumerate(years):
+            plt.plot(range(1, 10), bic_scores[i], label=year)
+
+        plt.title('BIC Scores for Different Numbers of Clusters')
+        plt.xlabel('Number of Clusters')
+        plt.ylabel('BIC Score')
+        plt.xticks(range(1, 10))
+        plt.legend(title='Year')
+        plt.grid(True)
+        plt.tight_layout()
+
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+        image_png = buffer.getvalue()
+        buffer.close()
+
+        graphic = urllib.parse.quote(base64.b64encode(image_png))
+
+        best_bic_clusters_html = f'<img src="data:image/png;base64,{graphic}" alt="BIC Scores Plot">'
+        bic_scores_html = bic_scores_df.to_html()
+
+        gmm_data = self.generate_gmm_plots(years)
+
+        return render(request, 'pages/cluster.html', {
+            'segment': 'cluster',
+            'best_bic_clusters_html': best_bic_clusters_html,
+            'bic_scores_html': bic_scores_html,
+            'gmm_plots': gmm_data['plots'],
+            'gmm_tables': gmm_data['tables'],
+        })
+
+    def calculate_bic_scores(self):
+        bic_scores_by_year = {}
+        start_year = 2021
+        end_year = 2023
+        years_range = range(start_year, end_year + 1)
+        min_samples_per_cluster = 2
+
+        for year in years_range:
+            data_year = Kub.objects.filter(tahun=year)
+
+            if data_year.count() >= min_samples_per_cluster:
+                features = ['toleransi', 'kesetaraan', 'kerjasama']
+                X = [[getattr(item, feature) for feature in features] for item in data_year]
+                data_year_df = pd.DataFrame(X, columns=features)
+                imputer = SimpleImputer(strategy='mean')
+                X = imputer.fit_transform(data_year_df)
+                scaler = StandardScaler()
+                X_scaled = scaler.fit_transform(X)
+                bic_scores = []
+
+                for n_components in range(1, 10):
+                    if data_year.count() < min_samples_per_cluster * n_components:
+                        continue
+
+                    gmm = GaussianMixture(n_components=n_components, random_state=42)
+                    gmm.fit(X_scaled)
+                    bic = gmm.bic(X_scaled)
+                    bic_scores.append(bic)
+
+                bic_scores_by_year[year] = bic_scores
+
+        bic_scores_df = pd.DataFrame(bic_scores_by_year)
+        return bic_scores_df
+
+    def generate_gmm_plots(self, years):
+        plots = {}
+        tables = {}
+        best_clusters = {2021: 8, 2022: 6, 2023: 9}
+
+        for year in years:
+            data_year = Kub.objects.filter(tahun=year)
+
+            if data_year.exists():
+                data_year_df = pd.DataFrame(list(data_year.values_list('id', 'provinsi', 'toleransi', 'kesetaraan', 'kerjasama')), columns=['id', 'provinsi', 'toleransi', 'kesetaraan', 'kerjasama'])
+                grouped_data = data_year_df.groupby('provinsi').agg({
+                    'toleransi': 'mean',
+                    'kesetaraan': 'mean',
+                    'kerjasama': 'mean'
+                }).reset_index()
+                imputer = SimpleImputer(strategy='mean')
+                X = imputer.fit_transform(grouped_data[['toleransi', 'kesetaraan', 'kerjasama']])
+                scaler = StandardScaler()
+                X_scaled = scaler.fit_transform(X)
+                n_clusters = best_clusters[year]
+                gmm = GaussianMixture(n_components=n_clusters, random_state=42)
+                gmm.fit(X_scaled)
+                labels = gmm.predict(X_scaled)
+                grouped_data['cluster'] = labels
+                grouped_data = self.reassign_clusters(grouped_data, n_clusters)
+
+                plt.figure(figsize=(14, 6))
+                sns.scatterplot(x='toleransi', y='kesetaraan', hue='cluster', data=grouped_data, palette='Set1', style='cluster', markers=True)
+                plt.title(f'Clusters for year {year}')
+                plt.xlabel('Toleransi')
+                plt.ylabel('Kesetaraan')
+                plt.legend(title='Cluster', bbox_to_anchor=(1.05, 1), loc='upper left')
+                
+                buffer = BytesIO()
+                plt.savefig(buffer, format='png')
+                buffer.seek(0)
+                image_png = buffer.getvalue()
+                buffer.close()
+
+                graphic = base64.b64encode(image_png).decode('utf-8')
+                plots[year] = f'data:image/png;base64,{graphic}'
+                plt.close()
+
+                tables[year] = grouped_data.to_dict(orient='records')
+
+        return {'plots': plots, 'tables': tables}
+
+    def reassign_clusters(self, data, n_clusters):
+        cluster_means = data.groupby('cluster')['toleransi'].mean().sort_values().reset_index()
+        cluster_means['new_cluster'] = range(1, n_clusters + 1)
+        cluster_mapping = cluster_means.set_index('cluster')['new_cluster'].to_dict()
+        data['cluster'] = data['cluster'].map(cluster_mapping)
+        return data
 
 class Preprocessing(View):
     def get(self, request, *args, **kwargs):
@@ -44,6 +201,7 @@ class Preprocessing(View):
             paginated_records = paginator.page(paginator.num_pages)
 
         return render(request, 'pages/preprocessing.html', {
+            "segment": "preprocessing",
             "form": UploadForm(),
             "paginated_records": paginated_records,
             "search_query": search_query,

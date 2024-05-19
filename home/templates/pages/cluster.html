@@ -1,0 +1,95 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{%  block title %}
+Cluster GMM
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-md-7 mt-4">
+      <div class="card">
+        <div class="card-header pb-0 px-3">
+          <h6 class="mb-0">Best BIC Clusters</h6>
+        </div>
+        <div class="card-body pt-4 p-3 plot-container">  
+          {{ best_bic_clusters_html | safe }}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-5 mt-4">
+      <div class="card h-100 mb-4">
+        <div class="card-header pb-0 px-3">
+          <div class="row">
+            <div class="col-md-6">
+              <h6 class="mb-0">BIC Scores</h6>
+            </div>
+          </div>
+        </div>
+        <div class="card-body pt-4 p-3 text-center">          
+          {{ bic_scores_html | safe }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% for year, plot in gmm_plots.items %}
+  <div class="row">
+    <div class="col-12 mt-4">
+      <div class="card">
+        <div class="card-header pb-0 px-3">
+          <h6 class="mb=0">Clusters Mapping for {{ year }}</h6>
+        </div>
+        <div class="card-body pt-4 p-3 plot-container">
+          <img src="{{ plot }}" alt="GMM Cluster Plot for {{ year }}" class="img-fluid">
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}   
+
+
+  {% for year, table_data in gmm_tables.items %}
+  <div class="row">
+    <div class="col-12 mt-4">
+      <div class="card">
+        <div class="card-header pb-0 px-3">
+          <h6 class="mb=0">GMM Clusters for {{ year }}</h6>
+        </div>
+        <div class="card-body px-0 pt-0 pb-2">
+          <div class="table-responsive p-0">
+            <table class="table align-items-center mb-0">
+              <thead>
+                <tr>
+                  <th class="text-center text-uppercase text-secondary text-sm font-weight-bolder opacity-7">No.</th>
+                  <th class="text-uppercase text-secondary text-sm font-weight-bolder opacity-7">Provinsi</th>
+                  <th class="text-center text-uppercase text-secondary text-sm font-weight-bolder opacity-7">Toleransi</th>
+                  <th class="text-center text-uppercase text-secondary text-sm font-weight-bolder opacity-7">Kesetaraan</th>
+                  <th class="text-center text-uppercase text-secondary text-sm font-weight-bolder opacity-7">Kerjasama</th>
+                  <th class="text-center text-uppercase text-secondary text-sm font-weight-bolder opacity-7">Cluster</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in table_data %}
+                <tr>
+                  <td class="text-center">{{ forloop.counter }}</td>
+                  <td>{{ row.provinsi|remove_quotes }}</td>
+                  <td class="text-center">{{ row.toleransi }}</td>
+                  <td class="text-center">{{ row.kesetaraan }}</td>
+                  <td class="text-center">{{ row.kerjasama }}</td>
+                  <td class="text-center">{{ row.cluster }}</td>                  
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>   
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock content %}

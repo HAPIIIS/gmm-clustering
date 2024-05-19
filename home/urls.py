@@ -4,7 +4,7 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('billing/', views.billing, name='billing'),
+    path('cluster/', views.Cluster.as_view(), name='cluster'),
     path('preprocessing/', views.Preprocessing.as_view(), name='preprocessing'),
     path('profile/', views.profile, name='profile'),
 
