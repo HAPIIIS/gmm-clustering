@@ -1,5 +1,32 @@
 {% extends 'layouts/base.html' %}
 {% load static %}
+{% load leaflet_tags %}
+
+{% block extrahead %}
+{% leaflet_js %}
+{% leaflet_css %}
+{% endblock %}
+
+{% block extrastyle %}
+<style>
+  .legend {
+    line-height: 18px;
+    color: #555;
+    background: white;
+    padding: 6px 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+  }
+  .legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+  }
+</style>
+{% endblock %}
+
 
 {% block title %}
 Dashboard
@@ -14,7 +41,7 @@ Dashboard
               <div class="row">
                 <div class="col-lg-6">
                   <div class="d-flex flex-column h-100">
-                    <p class="mb-1 pt-2 text-bold">Built by developers</p>
+                    <p class="mb-1 pt-2 text-bold">Tugas Akhir</p>
                     <h5 class="font-weight-bolder">GMM KUB</h5>
                     <p class="mb-5">Website ini menggunakan Gaussian Mixture Model (GMM) untuk mengelompokkan indeks kerukunan umat beragama, memungkinkan pemahaman yang lebih mendalam tentang kerukunan di antara kelompok beragama melalui analisis data yang disajikan secara visual.</p>
                     <a class="text-body text-sm font-weight-bold mb-0 icon-move-right mt-auto" href="javascript:;">
@@ -68,7 +95,9 @@ Dashboard
               </div>
             </div>
             <div class="card-body px-0 pb-2">
-              <!-- fill here -->
+              <div id="map">
+                {% leaflet_map "2023" %}
+              </div>
             </div>
           </div>
         </div>
@@ -88,7 +117,9 @@ Dashboard
               </div>
             </div>
             <div class="card-body px-0 pb-2">
-              <!-- fill here -->
+              <div id="map-2022">
+                {% leaflet_map "2022" %}
+              </div>
             </div>
           </div>
         </div>
@@ -108,7 +139,9 @@ Dashboard
               </div>
             </div>
             <div class="card-body px-0 pb-2">
-              <!-- fill here -->
+              <div id="map-2021">
+                {% leaflet_map "2021" %}
+              </div>
             </div>
           </div>
         </div>
@@ -243,5 +276,205 @@ Dashboard
       },
     });
   </script>
+
+  <script>
+    var map = L.map('map').setView([-2.5, 118.0], 4);  
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+    }).addTo(map);
+
+    var clusterColors = {
+        1: '#FF0000', // Red
+        2: '#00FF00', // Green
+        3: '#0000FF', // Blue
+        4: '#FFFF00', // Yellow
+        5: '#FFA500', // Orange
+        6: '#800080', // Purple
+        7: '#00FFFF', // Cyan
+        8: '#FFC0CB', // Pink
+        9: '#A52A2A'  // Brown
+    };
+
+    function getColor(cluster) {
+        return clusterColors[cluster] || '#808080'; // Default to grey if cluster is undefined
+    }
+
+    function style(feature) {
+        return {
+            fillColor: getColor(feature.properties.cluster),
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            dashArray: '3',
+            fillOpacity: 0.7
+        };
+    }
+
+    // Fetch GeoJSON and cluster data
+    Promise.all([
+        fetch("{% static 'geojson/indonesia.geojson' %}").then(response => response.json()),
+        fetch("{% url 'cluster_geojson' %}").then(response => response.json())
+    ]).then(([geojsonData, clusterData]) => {
+        console.log('GeoJSON Data:', geojsonData);
+        console.log('Cluster Data:', clusterData);
+
+        // Map clusters to provinces
+        const provinceClusters = {};
+        clusterData.clusters.forEach(cluster => {
+            provinceClusters[cluster.province] = cluster.cluster;
+        });
+
+        console.log('Province Clusters:', provinceClusters);
+
+        // Add cluster data to GeoJSON
+        geojsonData.features.forEach(feature => {
+            const provinceName = feature.properties.state; 
+            feature.properties.cluster = provinceClusters[provinceName];
+
+            console.log('Feature:', feature); 
+            if (!provinceClusters[provinceName]) {
+                console.warn(`No cluster data for province: ${provinceName}`);
+            }
+        });
+
+        L.geoJSON(geojsonData, {
+            style: style,
+            onEachFeature: function (feature, layer) {
+                layer.bindPopup('Province: ' + feature.properties.state + '<br>Cluster: ' + feature.properties.cluster);
+            }
+        }).addTo(map);
+    }).catch(error => console.error('Error loading data:', error));
+
+    var legend = L.control({position: 'bottomright'});
+
+    legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'legend'),
+            clusters = [1, 2, 3, 4, 5, 6, 7, 8, 9],
+            labels = ['Cluster 1', 'Cluster 2', 'Cluster 3', 'Cluster 4', 'Cluster 5', 'Cluster 6', 'Cluster 7', 'Cluster 8', 'Cluster 9'];
+
+        div.innerHTML = '<h4>Cluster Legend</h4>';
+
+        for (var i = 0; i < clusters.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(clusters[i]) + '"></i> ' +
+                labels[i] + '<br>';
+        }
+
+        return div;
+    };
+
+    legend.addTo(map);
+  </script>
+
+  <script>
+      // Function to create a map for a specific year and container ID
+      function createMap(containerId, year, clusterColors) {
+          var map = L.map(containerId).setView([-2.5, 118.0], 4);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              maxZoom: 19,
+          }).addTo(map);
+
+          function getColor(cluster) {
+              return clusterColors[cluster] || '#808080'; // Default to grey if cluster is undefined
+          }
+
+          function style(feature) {
+              return {
+                  fillColor: getColor(feature.properties.cluster),
+                  weight: 2,
+                  opacity: 1,
+                  color: 'white',
+                  dashArray: '3',
+                  fillOpacity: 0.7
+              };
+          }
+
+          // Fetch GeoJSON and cluster data
+          Promise.all([
+              fetch("{% static 'geojson/indonesia.geojson' %}").then(response => response.json()),
+              fetch("{% url 'cluster_geojson' %}").then(response => response.json())
+          ]).then(([geojsonData, clusterData]) => {
+              console.log(`GeoJSON Data (${year}):`, geojsonData);
+              console.log(`Cluster Data (${year}):`, clusterData);
+
+              // Filter cluster data for the specified year
+              const yearClusters = clusterData.clusters.filter(cluster => cluster.year === year);
+              console.log(`Clusters for ${year}:`, yearClusters);
+
+              // Map clusters to provinces for the specified year
+              const provinceClusters = {};
+              yearClusters.forEach(cluster => {
+                  provinceClusters[cluster.province] = cluster.cluster;
+              });
+
+              console.log('Province Clusters:', provinceClusters);
+
+              // Add cluster data to GeoJSON
+              geojsonData.features.forEach(feature => {
+                  const provinceName = feature.properties.state; // Adjust property name as necessary
+                  feature.properties.cluster = provinceClusters[provinceName];
+
+                  if (!provinceClusters[provinceName]) {
+                      console.warn(`No cluster data for province: ${provinceName}`);
+                  }
+              });
+
+              L.geoJSON(geojsonData, {
+                  style: style,
+                  onEachFeature: function (feature, layer) {
+                      layer.bindPopup('Province: ' + feature.properties.state + '<br>Cluster: ' + feature.properties.cluster);
+                  }
+              }).addTo(map);
+          }).catch(error => console.error(`Error loading data (${year}):`, error));
+
+          var legend = L.control({ position: 'bottomright' });
+
+          legend.onAdd = function (map) {
+              var div = L.DomUtil.create('div', 'legend'),
+                  clusters = Object.keys(clusterColors),
+                  labels = clusters.map(cluster => `Cluster ${cluster}`);
+
+              div.innerHTML = '<h4>Cluster Legend</h4>';
+
+              for (var i = 0; i < clusters.length; i++) {
+                  div.innerHTML +=
+                      '<i style="background:' + getColor(clusters[i]) + '"></i> ' +
+                      labels[i] + '<br>';
+              }
+
+              return div;
+          };
+
+          legend.addTo(map);
+      }
+
+      // Define cluster colors for each year
+      const clusterColors2022 = {
+          1: '#FF0000', // Red
+          2: '#00FF00', // Green
+          3: '#0000FF', // Blue
+          4: '#FFFF00', // Yellow
+          5: '#FFA500', // Orange
+          6: '#800080'  // Purple
+      };
+
+      const clusterColors2021 = {
+          1: '#FF0000', // Red
+          2: '#00FF00', // Green
+          3: '#0000FF', // Blue
+          4: '#FFFF00', // Yellow
+          5: '#FFA500', // Orange
+          6: '#800080', // Purple
+          7: '#00FFFF', // Cyan
+          8: '#FFC0CB'  // Pink
+      };
+
+      // Create maps for 2022 and 2021
+      createMap('map-2022', 2022, clusterColors2022);
+      createMap('map-2021', 2021, clusterColors2021);
+  </script>
+
+
+
 
 {% endblock scripts %}

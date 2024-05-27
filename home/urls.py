@@ -6,6 +6,8 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('cluster/', views.Cluster.as_view(), name='cluster'),
     path('preprocessing/', views.Preprocessing.as_view(), name='preprocessing'),
+    path('visualize/', views.Visualize.as_view(), name='visualize'),
+    path('api/cluster-geojson/', views.cluster_geojson, name='cluster_geojson'),
     path('profile/', views.profile, name='profile'),
 
     # Authentication

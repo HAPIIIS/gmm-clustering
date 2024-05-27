@@ -1,13 +1,12 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordChangeView, PasswordResetConfirmView
-from .forms import RegistrationForm, LoginForm, UserPasswordResetForm, UserSetPasswordForm, UserPasswordChangeForm
+from .forms import RegistrationForm, LoginForm, UserPasswordResetForm, UserSetPasswordForm, UserPasswordChangeForm, UploadForm, KubForm, ClusterForm
 from django.contrib.auth import logout
 from csv import reader
 from io import TextIOWrapper
-from .forms import UploadForm, KubForm
 from django.views.generic.base import View
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import Kub
+from .models import Kub, ClusterModel, Province
 import pandas as pd
 from django.db.models import Q
 import numpy as np
@@ -21,7 +20,8 @@ import base64
 import seaborn as sns
 import matplotlib
 matplotlib.use('Agg')
-
+from django.core.serializers import serialize
+from django.http import JsonResponse
 
 # Pages
 def index(request):
@@ -47,6 +47,20 @@ def index(request):
         'segment': 'index',
         'average_values': average_values
     })
+
+def cluster_geojson(request):
+    clusters = ClusterModel.objects.all()
+    cluster_data = []
+    
+    for cluster in clusters:
+        data = {
+            "province": cluster.province.name,
+            "year": cluster.year,
+            "cluster": cluster.cluster
+        }
+        cluster_data.append(data)
+    
+    return JsonResponse({"clusters": cluster_data})
 
 class Cluster(View):
     def get(self, request, *args, **kwargs):
@@ -333,47 +347,91 @@ class Preprocessing(View):
         else:
             return render(request, 'pages/preprocessing.html', {"form": UploadForm(), "file_missing": True}, { 'segment': 'preprocessing' })
 
-def profile(request):
-  if request.user.is_authenticated:
-    username = request.user.username
-  else:
-    username = None
+class Visualize(View):
+    def get(self, request, *args, **kwargs):
+        cluster_form = ClusterForm()
+        clusters = ClusterModel.objects.all().order_by('year')
 
-  return render(request, 'pages/profile.html', { 'segment': 'profile', 'username': username })
+        paginator = Paginator(clusters, 34)  # Show 34 clusters per page
+
+        page = request.GET.get('page')
+        try:
+            clusters = paginator.page(page)
+        except PageNotAnInteger:
+            clusters = paginator.page(1)
+        except EmptyPage:
+            clusters = paginator.page(paginator.num_pages)
+
+        return render(request, 'pages/visualize.html', {
+            'segment': 'visualize',
+            'cluster_form': cluster_form,
+            'clusters': clusters,
+        })
+    
+    def post(self, request, *args, **kwargs):
+        cluster_form = ClusterForm(request.POST)
+        if cluster_form.is_valid():
+            cluster_form.save()
+            return redirect('visualize')
+        
+        clusters = ClusterModel.objects.all()
+        paginator = Paginator(clusters, 34)  # Show 34 clusters per page
+
+        page = request.GET.get('page')
+        try:
+            clusters = paginator.page(page)
+        except PageNotAnInteger:
+            clusters = paginator.page(1)
+        except EmptyPage:
+            clusters = paginator.page(paginator.num_pages)
+            
+        return render(request, 'pages/visualize.html', {
+            'segment': 'visualize',
+            'cluster_form': cluster_form,
+            'clusters': clusters,
+        })
+
+def profile(request):
+    if request.user.is_authenticated:
+        username = request.user.username
+    else:
+        username = None
+
+    return render(request, 'pages/profile.html', { 'segment': 'profile', 'username': username })
 
 
 # Authentication
 class UserLoginView(LoginView):
-  template_name = 'accounts/login.html'
-  form_class = LoginForm
+    template_name = 'accounts/login.html'
+    form_class = LoginForm
 
 def register(request):
-  if request.method == 'POST':
-    form = RegistrationForm(request.POST)
-    if form.is_valid():
-      form.save()
-      print('Account created successfully!')
-      return redirect('/accounts/login/')
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            print('Account created successfully!')
+            return redirect('/accounts/login/')
+        else:
+            print("Register failed!")
     else:
-      print("Register failed!")
-  else:
-    form = RegistrationForm()
+        form = RegistrationForm()
 
-  context = { 'form': form }
-  return render(request, 'accounts/register.html', context)
+    context = { 'form': form }
+    return render(request, 'accounts/register.html', context)
 
 def logout_view(request):
-  logout(request)
-  return redirect('/accounts/login/')
+    logout(request)
+    return redirect('/accounts/login/')
 
 class UserPasswordResetView(PasswordResetView):
-  template_name = 'accounts/password_reset.html'
-  form_class = UserPasswordResetForm
+    template_name = 'accounts/password_reset.html'
+    form_class = UserPasswordResetForm
 
 class UserPasswordResetConfirmView(PasswordResetConfirmView):
-  template_name = 'accounts/password_reset_confirm.html'
-  form_class = UserSetPasswordForm
+    template_name = 'accounts/password_reset_confirm.html'
+    form_class = UserSetPasswordForm
 
 class UserPasswordChangeView(PasswordChangeView):
-  template_name = 'accounts/password_change.html'
-  form_class = UserPasswordChangeForm
+    template_name = 'accounts/password_change.html'
+    form_class = UserPasswordChangeForm

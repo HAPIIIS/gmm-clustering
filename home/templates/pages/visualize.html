@@ -1,0 +1,132 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load adjust_for_pagination %}
+
+
+{% block title %}
+Visualize GMM
+{% endblock %}
+
+{% block extrastyle %}
+<style>
+    .bg-gradient-orange {
+        background: linear-gradient(65deg, #ffa600, #bd6800); 
+        color: #fff; 
+    }
+    .bg-gradient-purple {
+        background: linear-gradient(65deg, #8c00ff, #622c77); 
+        color: #fff; 
+    }
+    .bg-gradient-pink {
+        background: linear-gradient(65deg, #FFC3A0, #FF6B6B); 
+        color: #fff; /* Text color, adjust as needed */
+    }
+
+    .bg-gradient-brown {
+        background: linear-gradient(65deg, #8B4513, #A0522D); 
+        color: #fff;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+      <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header pb-0">
+                <h6>Visualize GMM Clusters</h6>
+            </div>
+            <div class="container-fluid">
+                <div class="d-flex justify-content-end">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDataModal">Add Data</button>
+                </div>
+            </div>
+            <!-- Modal -->
+            <div class="modal fade" id="addDataModal" tabindex="-1" aria-labelledby="addDataModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addDataModalLabel">Add Data</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="POST" action="/visualize/">                        
+                            <div class="modal-body">
+                                    {% csrf_token %}
+                                    {{ cluster_form.as_p }}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+                <div class="table-responsive p-0">
+                <table class="table align-items-center mb-0">
+                    <thead>
+                    <tr>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">No</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Provinsi</th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tahun</th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Cluster</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in clusters %}
+                        <tr>
+                            <td class="text-center">{{ forloop.counter }}</td>
+                            <td>{{ record.province.name }}</td>
+                            <td class="text-center">{{ record.year }}</td>
+                            <td class="text-center">
+                                {% if record.cluster == 1 %}
+                                    <span class="badge badge-sm bg-gradient-danger">Cluster {{ record.cluster }}</span>
+                                {% elif record.cluster == 2 %}
+                                    <span class="badge badge-sm bg-gradient-success">Cluster {{ record.cluster }}</span>
+                                {% elif record.cluster == 3 %}
+                                    <span class="badge badge-sm bg-gradient-primary">Cluster {{ record.cluster }}</span>
+                                {% elif record.cluster == 4 %}
+                                    <span class="badge badge-sm bg-gradient-warning">Cluster {{ record.cluster }}</span>
+                                {% elif record.cluster == 5 %}
+                                    <span class="badge badge-sm bg-gradient-orange">Cluster {{ record.cluster }}</span>
+                                {% elif record.cluster == 6 %}
+                                    <span class="badge badge-sm bg-gradient-purple">Cluster {{ record.cluster }}</span>
+                                {% elif record.cluster == 7 %}
+                                    <span class="badge badge-sm bg-gradient-info">Cluster {{ record.cluster }}</span>
+                                {% elif record.cluster == 8 %}
+                                    <span class="badge badge-sm bg-gradient-pink">Cluster {{ record.cluster }}</span>
+                                {% elif record.cluster == 9 %}
+                                    <span class="badge badge-sm bg-gradient-brown">Cluster {{ record.cluster }}</span>
+                                {% endif %}
+                            </td>                 
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            <div class="pagination">
+                <span class="step-links">
+                    {% if clusters.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ clusters.previous_page_number }}">previous</a>
+                    {% endif %}
+        
+                    <span class="current">
+                        Page {{ clusters.number }} of {{ clusters.paginator.num_pages }}.
+                    </span>
+        
+                    {% if clusters.has_next %}
+                        <a href="?page={{ clusters.next_page_number }}">next</a>
+                        <a href="?page={{ clusters.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>    
+        </div>
+      </div>
+    </div>  
+  </div>
+{% endblock %}

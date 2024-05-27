@@ -51,12 +51,12 @@ INSTALLED_APPS = [
     "tailwind",
     "theme",
     "django_browser_reload",
+    "leaflet",    
 ]
 
-TAILWIND_APP_NAME = 'theme'
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
+GDAL_LIBRARY_PATH = r"D:\Project Python\skripsi-bnrn\env\Lib\site-packages\osgeo\\gdal.dll"
+GEOS_LIBRARY_PATH = r"D:\Project Python\skripsi-bnrn\env\Lib\site-packages\osgeo\geos_c.dll"
+
 NPM_BIN_PATH = "D:/nodejs/npm.cmd"
 
 MIDDLEWARE = [

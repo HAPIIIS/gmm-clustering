@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm, UsernameField, PasswordResetForm, SetPasswordForm
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
-from .models import Kub
+from .models import Kub, Province, ClusterModel
 from django.forms import FileField, Form, ModelForm
 
 #authentication
@@ -73,3 +73,9 @@ class KubForm(ModelForm):
 
 class UploadForm(Form):
    kub_file = FileField()
+
+#add cluster data
+class ClusterForm(forms.ModelForm):
+    class Meta:
+        model = ClusterModel
+        fields = ['province', 'year', 'cluster']
