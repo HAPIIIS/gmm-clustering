@@ -2,7 +2,6 @@
 {% load static %}
 {% load adjust_for_pagination %}
 
-
 {% block title %}
 Visualize GMM
 {% endblock %}
@@ -19,14 +18,12 @@ Visualize GMM
     }
     .bg-gradient-pink {
         background: linear-gradient(65deg, #FFC3A0, #FF6B6B); 
-        color: #fff; /* Text color, adjust as needed */
+        color: #fff;
     }
-
     .bg-gradient-brown {
         background: linear-gradient(65deg, #8B4513, #A0522D); 
         color: #fff;
     }
-
 </style>
 {% endblock %}
 
@@ -38,32 +35,18 @@ Visualize GMM
             <div class="card-header pb-0">
                 <h6>Visualize GMM Clusters</h6>
             </div>
-            <div class="container-fluid">
-                <div class="d-flex justify-content-end">
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDataModal">Add Data</button>
-                </div>
-            </div>
-            <!-- Modal -->
-            <div class="modal fade" id="addDataModal" tabindex="-1" aria-labelledby="addDataModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="addDataModalLabel">Add Data</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <form method="POST" action="/visualize/">                        
-                            <div class="modal-body">
-                                    {% csrf_token %}
-                                    {{ cluster_form.as_p }}
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
-                            </div>
-                        </form>
+            <div class="container-fluid mt-3">
+                <form method="POST" action="/visualize/" enctype="multipart/form-data">                    
+                    {% csrf_token %}                        
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">Upload CSV File</label>
+                        <input class="form-control" type="file" id="cluster_file" name="cluster_file" accept=".csv">
+                    </div>               
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn bg-gradient-dark">Add Data</button>
                     </div>
-                </div>
-            </div>
+                </form>
+            </div>           
             <div class="card-body px-0 pt-0 pb-2">
                 <div class="table-responsive p-0">
                 <table class="table align-items-center mb-0">
@@ -73,6 +56,9 @@ Visualize GMM
                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Provinsi</th>
                         <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tahun</th>
                         <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Cluster</th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Toleransi</th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kesetaraan</th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kerjasama</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -101,7 +87,10 @@ Visualize GMM
                                 {% elif record.cluster == 9 %}
                                     <span class="badge badge-sm bg-gradient-brown">Cluster {{ record.cluster }}</span>
                                 {% endif %}
-                            </td>                 
+                            </td>
+                            <td class="text-center">{{ record.toleransi }}</td>
+                            <td class="text-center">{{ record.kesetaraan }}</td>
+                            <td class="text-center">{{ record.kerjasama }}</td>               
                         </tr>
                         {% endfor %}
                     </tbody>

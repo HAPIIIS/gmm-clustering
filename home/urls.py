@@ -7,7 +7,14 @@ urlpatterns = [
     path('cluster/', views.Cluster.as_view(), name='cluster'),
     path('preprocessing/', views.Preprocessing.as_view(), name='preprocessing'),
     path('visualize/', views.Visualize.as_view(), name='visualize'),
+    
+    path('export/csv/', views.ExportCSV.as_view(), name='export_csv'),
+    
     path('api/cluster-geojson/', views.cluster_geojson, name='cluster_geojson'),
+    path('data-agama/', views.data_agama, name='data_agama'),
+    path('data-jenis-kelamin/', views.data_jenis_kelamin, name='data_jenis_kelamin'),
+    path('data-usia/', views.data_usia, name='data_usia'),
+   
     path('profile/', views.profile, name='profile'),
 
     # Authentication

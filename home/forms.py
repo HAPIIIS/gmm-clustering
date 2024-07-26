@@ -65,17 +65,15 @@ class UserPasswordChangeForm(PasswordChangeForm):
         'class': 'form-control', 'placeholder': 'Confirm New Password'
     }), label="Confirm New Password")
 
-#store file
+# Form upload untuk data KUB di preprocessing
 class KubForm(ModelForm):
-   class Meta:
-      model = Kub
-      fields = ["provinsi","kabupaten","jenis_kelamin","usia","agama","menikah","pendidikan","pekerjaan","kub","toleransi","kesetaraan","kerjasama","tahun"]
+    class Meta:
+        model = Kub
+        fields = ["provinsi","kabupaten","jenis_kelamin","usia","agama","menikah","pendidikan","pekerjaan","kub","toleransi","kesetaraan","kerjasama","tahun"]
 
 class UploadForm(Form):
-   kub_file = FileField()
+    kub_file = FileField()
 
-#add cluster data
-class ClusterForm(forms.ModelForm):
-    class Meta:
-        model = ClusterModel
-        fields = ['province', 'year', 'cluster']
+# Upload form hasil cluster
+class UploadClusterForm(Form):
+    cluster_file = FileField()

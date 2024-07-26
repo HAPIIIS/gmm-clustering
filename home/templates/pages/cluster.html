@@ -2,24 +2,47 @@
 {% load static %}
 {% load custom_filters %}
 
-{%  block title %}
+{% block title %}
 Cluster GMM
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
+  <!-- Form for selecting year and number of clusters -->
+  <form method="get" action="{% url 'cluster' %}" class="mb-3">
+    <div class="row">
+      <div class="col-md-6">
+        <label for="year-select">Select Year:</label>
+        <select id="year-select" name="year" class="form-control">
+          {% for year in years %}
+            <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="cluster-select">Select Number of Clusters:</label>
+        <select id="cluster-select" name="n_clusters" class="form-control">
+          {% for i in cluster_range %}
+            <option value="{{ i }}" {% if i == selected_clusters %}selected{% endif %}>{{ i }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <button type="submit" class="btn bg-gradient-dark mt-3">Submit</button>
+  </form>
+
   <div class="row">
-    <div class="col-md-7 mt-4">
+    <div class="col-md-10 mt-4">
       <div class="card">
         <div class="card-header pb-0 px-3">
           <h6 class="mb-0">Best BIC Clusters</h6>
         </div>
-        <div class="card-body pt-4 p-3 plot-container">  
+        <div class="card-body pt-4 p-3 plot-container">
           {{ best_bic_clusters_html | safe }}
         </div>
       </div>
     </div>
-    <div class="col-md-5 mt-4">
+    <div class="col-md-2 mt-4">
       <div class="card h-100 mb-4">
         <div class="card-header pb-0 px-3">
           <div class="row">
@@ -28,37 +51,40 @@ Cluster GMM
             </div>
           </div>
         </div>
-        <div class="card-body pt-4 p-3 text-center">          
+        <div class="card-body pt-4 p-3 text-center">
           {{ bic_scores_html | safe }}
         </div>
       </div>
     </div>
   </div>
 
-  {% for year, plot in gmm_plots.items %}
   <div class="row">
     <div class="col-12 mt-4">
       <div class="card">
         <div class="card-header pb-0 px-3">
-          <h6 class="mb=0">Clusters Mapping for {{ year }}</h6>
+          <h6 class="mb-0">Clusters Plot for {{ selected_year }}</h6>
         </div>
         <div class="card-body pt-4 p-3 plot-container">
-          <img src="{{ plot }}" alt="GMM Cluster Plot for {{ year }}" class="img-fluid">
+          {% if gmm_plot %}
+            <img src="{{ gmm_plot }}" alt="GMM Cluster Plot for {{ selected_year }}" class="img-fluid">
+          {% else %}
+            <p>No data available for the selected year and cluster combination.</p>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
-  {% endfor %}   
 
-
-  {% for year, table_data in gmm_tables.items %}
   <div class="row">
     <div class="col-12 mt-4">
       <div class="card">
         <div class="card-header pb-0 px-3">
-          <h6 class="mb=0">GMM Clusters for {{ year }}</h6>
+          <h6 class="mb-0">GMM Clusters for {{ selected_year }}</h6>
         </div>
         <div class="card-body px-0 pt-0 pb-2">
+          <div class="container d-flex justify-content-end">
+            <a href="{% url 'export_csv' %}?year={{ selected_year }}&n_clusters={{ selected_clusters }}" class="btn bg-gradient-dark">Export CSV</a>
+          </div>
           <div class="table-responsive p-0">
             <table class="table align-items-center mb-0">
               <thead>
@@ -72,24 +98,28 @@ Cluster GMM
                 </tr>
               </thead>
               <tbody>
-                {% for row in table_data %}
-                <tr>
-                  <td class="text-center">{{ forloop.counter }}</td>
-                  <td>{{ row.provinsi|remove_quotes }}</td>
-                  <td class="text-center">{{ row.toleransi }}</td>
-                  <td class="text-center">{{ row.kesetaraan }}</td>
-                  <td class="text-center">{{ row.kerjasama }}</td>
-                  <td class="text-center">{{ row.cluster }}</td>                  
-                </tr>
-                {% endfor %}
+                {% if gmm_table %}
+                  {% for row in gmm_table %}
+                    <tr>
+                      <td class="text-center">{{ forloop.counter }}</td>
+                      <td>{{ row.provinsi|remove_quotes }}</td>
+                      <td class="text-center">{{ row.toleransi }}</td>
+                      <td class="text-center">{{ row.kesetaraan }}</td>
+                      <td class="text-center">{{ row.kerjasama }}</td>
+                      <td class="text-center">{{ row.cluster }}</td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="6" class="text-center">No data available for the selected year and cluster combination.</td>
+                  </tr>
+                {% endif %}
               </tbody>
             </table>
           </div>
         </div>
       </div>
-    </div>   
+    </div>
   </div>
-  {% endfor %}
 </div>
-
 {% endblock content %}

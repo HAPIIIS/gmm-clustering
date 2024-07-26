@@ -10,7 +10,7 @@
 {% block extrastyle %}
 <style>
   .legend {
-    line-height: 18px;
+    line-height: 10px;
     color: #555;
     background: white;
     padding: 6px 8px;
@@ -18,8 +18,8 @@
     border-radius: 5px;
   }
   .legend i {
-    width: 18px;
-    height: 18px;
+    width: 10px;
+    height: 10px;
     float: left;
     margin-right: 8px;
     opacity: 0.7;
@@ -33,37 +33,52 @@ Dashboard
 {% endblock %}
 
 {% block content %}
+    {% if not user.is_authenticated %}
+    <div class="container">
+      <div class="row my-4">
+        <div class="col-lg-6 order-2 order-lg-1 d-flex flex-column justify-content-center">
+          <h1>Ukur Kerukunan Umat Beragama dengan GMM Clustering</h1>
+          <p>Alat ukur inovatif ini dapat membantu Anda mengidentifikasi tingkat kerukunan di suatu daerah.</p>
+          <div class="d-flex flex-column flex-md-row" data-aos="fade-up" data-aos-delay="200">
+            <a href="#map" class="btn bg-gradient-dark">Pelajari Lebih Lanjut<i class="ni ni-curved-next mx-2"></i></a>            
+          </div>
+        </div>
+        <div class="col-lg-6 order-1 order-lg-2 hero-img" data-aos="zoom-out">
+          <img src="{% static 'img/character.png' %}" class="img-fluid animated" alt="">
+        </div>
+      </div>
+    </div>
+    {% endif %}
     <div class="container-fluid py-4">
-      <div class="row mt-4">
-        <div class="col-lg-7 mb-lg-0 mb-4">
+      <div class="row">
+        <div class="col-lg-12 mb-md-0 mb-4">
           <div class="card">
-            <div class="card-body p-3">
+            <div class="card-header pb-0">
               <div class="row">
-                <div class="col-lg-6">
-                  <div class="d-flex flex-column h-100">
-                    <p class="mb-1 pt-2 text-bold">Tugas Akhir</p>
-                    <h5 class="font-weight-bolder">GMM KUB</h5>
-                    <p class="mb-5">Website ini menggunakan Gaussian Mixture Model (GMM) untuk mengelompokkan indeks kerukunan umat beragama, memungkinkan pemahaman yang lebih mendalam tentang kerukunan di antara kelompok beragama melalui analisis data yang disajikan secara visual.</p>
-                    <a class="text-body text-sm font-weight-bold mb-0 icon-move-right mt-auto" href="javascript:;">
-                      Read More
-                      <i class="fas fa-arrow-right text-sm ms-1" aria-hidden="true"></i>
-                    </a>
-                  </div>
-                </div>
-                <div class="col-lg-5 ms-auto text-center mt-5 mt-lg-0">
-                  <div class="bg-gradient-primary border-radius-lg h-100">
-                    <img src="{% static 'img/shapes/waves-white.svg' %}" class="position-absolute h-100 w-50 top-0 d-lg-block d-none" alt="waves">
-                    <div class="position-relative d-flex align-items-center justify-content-center h-100">
-                      <img class="w-100 position-relative z-index-2 pt-4" src="{% static 'img/illustrations/rocket-white.png' %}" alt="rocket">
-                    </div>
-                  </div>
-                </div>
+                <div class="col-lg-6 col-7">
+                  <h6>Pemetaan Indeks KUB</h6>
+                  <p class="text-sm mb-0">
+                    <select id="select-year" class="form-select mt-2">
+                      <option value="2023">2023</option>
+                      <option value="2022">2022</option>
+                      <option value="2021">2021</option>
+                    </select>
+                  </p>
+                </div>          
+              </div>
+            </div>
+            <div class="card-body px-0 pb-2">
+              <div id="map">
+                {% leaflet_map "kub" %}                
               </div>
             </div>
           </div>
         </div>
+      </div>
+      
+      <div class="row my-4">
         <div class="col-lg-5">
-          <div class="card z-index-2">
+          <div class="card h-70">
             <div class="card-header pb-0">
               <h6>Indeks Kerukunan Umat Beragama</h6>
               <p class="text-sm">
@@ -73,87 +88,46 @@ Dashboard
             </div>
             <div class="card-body p-3">
               <div class="chart">
-                <canvas id="chart-line" class="chart-canvas" height="300"></canvas>
+                <canvas id="chart-line" class="chart-canvas" height="505"></canvas>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="row my-4">
-        <div class="col-lg-12 mb-md-0 mb-4">
-          <div class="card">
-            <div class="card-header pb-0">
+        <div class="col-lg-7 my-4">
+          <div class="card h-50">
+            <div class="card-body p-3">
               <div class="row">
-                <div class="col-lg-6 col-7">
-                  <h6>Pemetaan Indeks KUB</h6>
-                  <p class="text-sm mb-0">
-                    <i class="fa fa-check text-info" aria-hidden="true"></i>
-                    <span class="font-weight-bold ms-1">2023</span>
-                  </p>
-                </div>          
+                <canvas id="agamaChart"></canvas>
               </div>
             </div>
-            <div class="card-body px-0 pb-2">
-              <div id="map">
-                {% leaflet_map "2023" %}
+          </div>  
+          <div class="row">
+            <div class="col-6 my-4">
+              <div class="card h-100">
+                <div class="card-body p-3">
+                  <canvas id="jenisKelaminChart"></canvas>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <div class="row my-4">
-        <div class="col-lg-12 mb-md-0 mb-4">
-          <div class="card">
-            <div class="card-header pb-0">
-              <div class="row">
-                <div class="col-lg-6 col-7">
-                  <h6>Pemetaan Indeks KUB</h6>
-                  <p class="text-sm mb-0">
-                    <i class="fa fa-check text-info" aria-hidden="true"></i>
-                    <span class="font-weight-bold ms-1">2022</span>
-                  </p>
-                </div>          
-              </div>
-            </div>
-            <div class="card-body px-0 pb-2">
-              <div id="map-2022">
-                {% leaflet_map "2022" %}
+            <div class="col-6 my-4">
+              <div class="card h-100">
+                <div class="card-body p-3">
+                  <canvas id="usiaChart"></canvas>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      <div class="row my-4">
-        <div class="col-lg-12 mb-md-0 mb-4">
-          <div class="card">
-            <div class="card-header pb-0">
-              <div class="row">
-                <div class="col-lg-6 col-7">
-                  <h6>Pemetaan Indeks KUB</h6>
-                  <p class="text-sm mb-0">
-                    <i class="fa fa-check text-info" aria-hidden="true"></i>
-                    <span class="font-weight-bold ms-1">2021</span>
-                  </p>
-                </div>          
-              </div>
-            </div>
-            <div class="card-body px-0 pb-2">
-              <div id="map-2021">
-                {% leaflet_map "2021" %}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        </div>        
+      </div>  
     </div>
 
 {% endblock content %}
 
-<!-- Specific JS goes HERE --> 
 {% block scripts %}
 
   <script src="{% static 'js/plugins/chartjs.min.js' %}"></script>
+
+  <!-- Line Chart Indeks KUB -->
   <script>
 
     var ctx2 = document.getElementById("chart-line").getContext("2d");
@@ -162,19 +136,19 @@ Dashboard
 
     gradientStroke1.addColorStop(1, 'rgba(203,12,159,0.2)');
     gradientStroke1.addColorStop(0.2, 'rgba(72,72,176,0.0)');
-    gradientStroke1.addColorStop(0, 'rgba(203,12,159,0)'); //purple colors
+    gradientStroke1.addColorStop(0, 'rgba(203,12,159,0)'); 
 
     var gradientStroke2 = ctx2.createLinearGradient(0, 230, 0, 50);
 
     gradientStroke2.addColorStop(1, 'rgba(20,23,39,0.2)');
     gradientStroke2.addColorStop(0.2, 'rgba(72,72,176,0.0)');
-    gradientStroke2.addColorStop(0, 'rgba(20,23,39,0)'); //purple colors
+    gradientStroke2.addColorStop(0, 'rgba(20,23,39,0)'); 
     
     var gradientStroke3 = ctx2.createLinearGradient(0, 230, 0, 50);
 
     gradientStroke3.addColorStop(1, 'rgba(20,23,39,0.2)');
     gradientStroke3.addColorStop(0.2, 'rgba(72,72,176,0.0)');
-    gradientStroke3.addColorStop(0, 'rgba(203,23,39,0)'); //purple colors
+    gradientStroke3.addColorStop(0, 'rgba(203,23,39,0)'); 
 
     new Chart(ctx2, {
       type: "line",
@@ -182,7 +156,7 @@ Dashboard
         labels: ["2021", "2022", "2023"],
         datasets: [{
             label: "Toleransi",
-            tension: 0.4,
+            tension: 0,
             borderWidth: 0,
             pointRadius: 0,
             borderColor: "#cb0c9f",
@@ -195,7 +169,7 @@ Dashboard
           },
           {
             label: "Kesetaraan",
-            tension: 0.4,
+            tension: 0,
             borderWidth: 0,
             pointRadius: 0,
             borderColor: "#575f9a",
@@ -207,7 +181,7 @@ Dashboard
           },
           {
             label: "Kerjasama",
-            tension: 0.4,
+            tension: 0,
             borderWidth: 0,
             pointRadius: 0,
             borderColor: "#bc6c25",
@@ -277,204 +251,378 @@ Dashboard
     });
   </script>
 
+  <!-- Proporsi Agama -->
   <script>
-    var map = L.map('map').setView([-2.5, 118.0], 4);  
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    async function fetchAgamaData() {
+        const response = await fetch('/data-agama/');
+        const data = await response.json();
+        return data;
+    }
+
+    async function renderChart() {
+        const data = await fetchAgamaData();
+        const ctx = document.getElementById('agamaChart').getContext('2d');
+        const agamaLabels = Object.keys(data.data);
+        const agamaCounts = Object.values(data.data);
+        const totalCount = data.total_count;
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: agamaLabels,
+                datasets: [{
+                    label: 'Jumlah Responden',
+                    data: agamaCounts,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return ((value / totalCount) * 100).toFixed(2) + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                const value = tooltipItem.raw;
+                                const percentage = ((value / totalCount) * 100).toFixed(2);
+                                return `${value} (${percentage}%)`;
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Proporsi Agama'
+                    }
+                }
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', renderChart);
+  </script>
+
+  <!-- Jenis Kelamin and Data Usia -->
+  <script>
+    async function fetchJenisKelaminData() {
+      const response = await fetch('/data-jenis-kelamin/');
+      const data = await response.json();
+      return data;
+    }
+
+    async function fetchUsiaData() {
+      const response = await fetch('/data-usia/');
+      const data = await response.json();
+      return data;
+    }
+
+    async function renderJenisKelaminChart() {
+      const data = await fetchJenisKelaminData();
+      const ctx = document.getElementById('jenisKelaminChart').getContext('2d');
+      const jenisKelaminLabels = Object.keys(data).map(key => {
+        return key === '1' ? 'Laki-laki' : 'Perempuan';
+      });
+      const jenisKelaminCounts = Object.values(data);
+
+      
+      const colors = {
+        'Laki-laki': {
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderColor: 'rgba(54, 162, 235, 1)'
+        },
+        'Perempuan': {
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)'
+        }
+      };
+
+      const backgroundColors = jenisKelaminLabels.map(label => colors[label].backgroundColor);
+      const borderColors = jenisKelaminLabels.map(label => colors[label].borderColor);
+
+      new Chart(ctx, {
+          type: 'pie',
+          data: {
+              labels: jenisKelaminLabels,
+              datasets: [{
+                  label: 'Proporsi Jenis Kelamin',
+                  data: jenisKelaminCounts,
+                  backgroundColor: backgroundColors,
+                  borderColor: borderColors,
+                  borderWidth: 1
+              }]
+          },
+          options: {
+              responsive: true,
+              plugins: {
+                  legend: {
+                      position: 'top',
+                  },
+                  title: {
+                      display: true,
+                      text: 'Proporsi Jenis Kelamin'
+                  }
+              }
+          }
+      });
+    }
+
+    async function renderUsiaChart() {
+        const data = await fetchUsiaData();
+        const ctx = document.getElementById('usiaChart').getContext('2d');
+        const usiaLabels = Object.keys(data);
+        const usiaCounts = Object.values(data);
+
+        const totalCount = usiaCounts.reduce((acc, curr) => acc + curr, 0);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: usiaLabels,
+                datasets: [{
+                    label: 'Jumlah Responden',
+                    data: usiaCounts,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return (value / totalCount * 100).toFixed(0) + '%'; 
+                            }
+                        }
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Persebaran Usia'
+                    }
+                }
+            }
+        });
+    }
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderJenisKelaminChart();
+        renderUsiaChart();
+    });
+  </script>
+
+  <!-- Leaflet.JS -->
+  <script>
+    let map;
+
+    function createMap(containerId, year, clusterColors) {
+      if (map) {
+        map.remove();
+      }
+
+      map = L.map(containerId).setView([-2.5, 118.0], 4);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-    }).addTo(map);
+      }).addTo(map);
 
-    var clusterColors = {
-        1: '#FF0000', // Red
-        2: '#00FF00', // Green
-        3: '#0000FF', // Blue
-        4: '#FFFF00', // Yellow
-        5: '#FFA500', // Orange
-        6: '#800080', // Purple
-        7: '#00FFFF', // Cyan
-        8: '#FFC0CB', // Pink
-        9: '#A52A2A'  // Brown
-    };
+      function getColor(cluster) {
+        return clusterColors[cluster] || '#808080';
+      }
 
-    function getColor(cluster) {
-        return clusterColors[cluster] || '#808080'; // Default to grey if cluster is undefined
-    }
-
-    function style(feature) {
+      function style(feature) {
         return {
-            fillColor: getColor(feature.properties.cluster),
-            weight: 2,
-            opacity: 1,
-            color: 'white',
-            dashArray: '3',
-            fillOpacity: 0.7
+          fillColor: getColor(feature.properties.cluster),
+          weight: 2,
+          opacity: 1,
+          color: 'white',
+          dashArray: '3',
+          fillOpacity: 0.7
         };
-    }
+      }
 
-    // Fetch GeoJSON and cluster data
-    Promise.all([
+      Promise.all([
         fetch("{% static 'geojson/indonesia.geojson' %}").then(response => response.json()),
         fetch("{% url 'cluster_geojson' %}").then(response => response.json())
-    ]).then(([geojsonData, clusterData]) => {
-        console.log('GeoJSON Data:', geojsonData);
-        console.log('Cluster Data:', clusterData);
+      ]).then(([geojsonData, clusterData]) => {
+        console.log(`GeoJSON Data (${year}):`, geojsonData);
+        console.log(`Cluster Data (${year}):`, clusterData);
 
-        // Map clusters to provinces
+        const yearClusters = clusterData.clusters.filter(cluster => cluster.year === year);
         const provinceClusters = {};
-        clusterData.clusters.forEach(cluster => {
-            provinceClusters[cluster.province] = cluster.cluster;
+        yearClusters.forEach(cluster => {
+          provinceClusters[cluster.province] = {
+            cluster: cluster.cluster,
+            toleransi: cluster.toleransi,
+            kesetaraan: cluster.kesetaraan,
+            kerjasama: cluster.kerjasama
+          };
         });
 
         console.log('Province Clusters:', provinceClusters);
 
-        // Add cluster data to GeoJSON
         geojsonData.features.forEach(feature => {
-            const provinceName = feature.properties.state; 
-            feature.properties.cluster = provinceClusters[provinceName];
-
-            console.log('Feature:', feature); 
-            if (!provinceClusters[provinceName]) {
-                console.warn(`No cluster data for province: ${provinceName}`);
-            }
+          const provinceName = feature.properties.state;
+          const clusterInfo = provinceClusters[provinceName];
+          if (clusterInfo) {
+            feature.properties.cluster = clusterInfo.cluster;
+            feature.properties.toleransi = clusterInfo.toleransi;
+            feature.properties.kesetaraan = clusterInfo.kesetaraan;
+            feature.properties.kerjasama = clusterInfo.kerjasama;
+          } else {
+            feature.properties.cluster = 'N/A';
+            feature.properties.toleransi = 'N/A';
+            feature.properties.kesetaraan = 'N/A';
+            feature.properties.kerjasama = 'N/A';
+          }
         });
-
+        
+        console.log('Cluster Data:', clusterData);
+        console.log('Year Clusters:', yearClusters);
+        console.log('Province Clusters:', provinceClusters);
+        
         L.geoJSON(geojsonData, {
-            style: style,
-            onEachFeature: function (feature, layer) {
-                layer.bindPopup('Province: ' + feature.properties.state + '<br>Cluster: ' + feature.properties.cluster);
-            }
+          style: style,
+          onEachFeature: function (feature, layer) {
+            const popupContent = `
+              Province: ${feature.properties.state}<br>
+              Cluster: ${feature.properties.cluster}<br>
+              Toleransi: ${feature.properties.toleransi}<br>
+              Kesetaraan: ${feature.properties.kesetaraan}<br>
+              Kerjasama: ${feature.properties.kerjasama}
+            `;
+            layer.bindPopup(popupContent);
+          }
         }).addTo(map);
-    }).catch(error => console.error('Error loading data:', error));
+      }).catch(error => console.error(`Error loading data (${year}):`, error));
 
-    var legend = L.control({position: 'bottomright'});
+      var legend = L.control({ position: 'bottomright' });
 
-    legend.onAdd = function (map) {
-        var div = L.DomUtil.create('div', 'legend'),
-            clusters = [1, 2, 3, 4, 5, 6, 7, 8, 9],
-            labels = ['Cluster 1', 'Cluster 2', 'Cluster 3', 'Cluster 4', 'Cluster 5', 'Cluster 6', 'Cluster 7', 'Cluster 8', 'Cluster 9'];
+      legend.onAdd = function (map) {
+          var div = L.DomUtil.create('div', 'legend'),
+              clusters = Object.keys(clusterColors),
+              labels = clusters.map(cluster => `Cluster ${cluster}`);
 
-        div.innerHTML = '<h4>Cluster Legend</h4>';
-
-        for (var i = 0; i < clusters.length; i++) {
-            div.innerHTML +=
-                '<i style="background:' + getColor(clusters[i]) + '"></i> ' +
-                labels[i] + '<br>';
-        }
-
-        return div;
-    };
-
-    legend.addTo(map);
-  </script>
-
-  <script>
-      // Function to create a map for a specific year and container ID
-      function createMap(containerId, year, clusterColors) {
-          var map = L.map(containerId).setView([-2.5, 118.0], 4);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              maxZoom: 19,
-          }).addTo(map);
-
-          function getColor(cluster) {
-              return clusterColors[cluster] || '#808080'; // Default to grey if cluster is undefined
-          }
-
-          function style(feature) {
-              return {
-                  fillColor: getColor(feature.properties.cluster),
-                  weight: 2,
-                  opacity: 1,
-                  color: 'white',
-                  dashArray: '3',
-                  fillOpacity: 0.7
-              };
-          }
-
-          // Fetch GeoJSON and cluster data
-          Promise.all([
-              fetch("{% static 'geojson/indonesia.geojson' %}").then(response => response.json()),
-              fetch("{% url 'cluster_geojson' %}").then(response => response.json())
-          ]).then(([geojsonData, clusterData]) => {
-              console.log(`GeoJSON Data (${year}):`, geojsonData);
-              console.log(`Cluster Data (${year}):`, clusterData);
-
-              // Filter cluster data for the specified year
-              const yearClusters = clusterData.clusters.filter(cluster => cluster.year === year);
-              console.log(`Clusters for ${year}:`, yearClusters);
-
-              // Map clusters to provinces for the specified year
-              const provinceClusters = {};
-              yearClusters.forEach(cluster => {
-                  provinceClusters[cluster.province] = cluster.cluster;
-              });
-
-              console.log('Province Clusters:', provinceClusters);
-
-              // Add cluster data to GeoJSON
-              geojsonData.features.forEach(feature => {
-                  const provinceName = feature.properties.state; // Adjust property name as necessary
-                  feature.properties.cluster = provinceClusters[provinceName];
-
-                  if (!provinceClusters[provinceName]) {
-                      console.warn(`No cluster data for province: ${provinceName}`);
-                  }
-              });
-
-              L.geoJSON(geojsonData, {
-                  style: style,
-                  onEachFeature: function (feature, layer) {
-                      layer.bindPopup('Province: ' + feature.properties.state + '<br>Cluster: ' + feature.properties.cluster);
-                  }
-              }).addTo(map);
-          }).catch(error => console.error(`Error loading data (${year}):`, error));
-
-          var legend = L.control({ position: 'bottomright' });
-
-          legend.onAdd = function (map) {
-              var div = L.DomUtil.create('div', 'legend'),
-                  clusters = Object.keys(clusterColors),
-                  labels = clusters.map(cluster => `Cluster ${cluster}`);
-
-              div.innerHTML = '<h4>Cluster Legend</h4>';
-
-              for (var i = 0; i < clusters.length; i++) {
-                  div.innerHTML +=
-                      '<i style="background:' + getColor(clusters[i]) + '"></i> ' +
-                      labels[i] + '<br>';
-              }
-
-              return div;
+          var descriptions = {
+              2021: [
+                  "Terendah",
+                  "Rendah",
+                  "Dibawah Rata-rata",
+                  "Rata-rata",
+                  "Diatas Rata-rata",
+                  "Tinggi",
+                  "Sangat Tinggi",
+                  "Tertinggi"
+              ],
+              2022: [
+                  "Terendah",
+                  "Rendah",
+                  "Rata-rata",
+                  "Diatas Rata-rata",
+                  "Tinggi",
+                  "Tertinggi"
+              ],
+              2023: [
+                  "Terendah",
+                  "Rendah",
+                  "Dibawah Rata-rata",
+                  "Rata-rata",
+                  "Diatas Rata-rata",
+                  "Tinggi",
+                  "Sangat Tinggi",
+                  "Tertinggi Kedua",
+                  "Tertinggi"
+              ]
           };
 
-          legend.addTo(map);
-      }
+          var selectedYear = parseInt(document.getElementById('select-year').value);
+          var selectedDescriptions = descriptions[selectedYear] || descriptions[2023];
 
-      // Define cluster colors for each year
-      const clusterColors2022 = {
-          1: '#FF0000', // Red
-          2: '#00FF00', // Green
-          3: '#0000FF', // Blue
-          4: '#FFFF00', // Yellow
-          5: '#FFA500', // Orange
-          6: '#800080'  // Purple
+          div.innerHTML = '<h5>Interpretasi Cluster</h5>';
+
+          for (var i = 0; i < clusters.length; i++) {
+              div.innerHTML +=
+                  '<i style="background:' + getColor(clusters[i]) + '"></i> ' +
+                  labels[i] + ': ' + (selectedDescriptions[i] || 'N/A') + '<br>';
+          }
+
+          return div;
       };
 
-      const clusterColors2021 = {
-          1: '#FF0000', // Red
-          2: '#00FF00', // Green
-          3: '#0000FF', // Blue
-          4: '#FFFF00', // Yellow
-          5: '#FFA500', // Orange
-          6: '#800080', // Purple
-          7: '#00FFFF', // Cyan
-          8: '#FFC0CB'  // Pink
-      };
+      legend.addTo(map);
 
-      // Create maps for 2022 and 2021
-      createMap('map-2022', 2022, clusterColors2022);
-      createMap('map-2021', 2021, clusterColors2021);
+      document.getElementById('select-year').addEventListener('change', function () {
+          var selectedYear = parseInt(this.value);
+          var selectedDescriptions = descriptions[selectedYear] || descriptions[2023];
+
+          var legendDiv = document.querySelector('.legend');
+          if (legendDiv) {
+              var newContent = '<h4>Cluster Legend</h4>';
+              for (var i = 0; i < clusters.length; i++) {
+                  newContent +=
+                      '<i style="background:' + getColor(clusters[i]) + '"></i> ' +
+                      labels[i] + ': ' + (selectedDescriptions[i] || 'N/A') + '<br>';
+              }
+              legendDiv.innerHTML = newContent;
+          }
+      });
+
+    }
+
+    const clusterColors2021 = {
+      1: '#FF0000',
+      2: '#00FF00',
+      3: '#0000FF',
+      4: '#FFFF00',
+      5: '#FFA500',
+      6: '#800080',
+      7: '#00FFFF',
+      8: '#FFC0CB'
+    };
+
+    const clusterColors2022 = {
+      1: '#FF0000',
+      2: '#00FF00',
+      3: '#0000FF',
+      4: '#FFFF00',
+      5: '#FFA500',
+      6: '#800080'
+    };
+
+    const clusterColors2023 = {
+      1: '#FF0000',
+      2: '#00FF00',
+      3: '#0000FF',
+      4: '#FFFF00',
+      5: '#FFA500',
+      6: '#800080',
+      7: '#00FFFF',
+      8: '#FFC0CB',
+      9: '#8B4513'
+    };
+
+    createMap('map', 2023, clusterColors2023);
+
+    document.getElementById('select-year').addEventListener('change', function () {
+      var selectedYear = parseInt(this.value);
+      createMap('map', selectedYear, eval('clusterColors' + selectedYear));
+    });
+
   </script>
-
-
-
-
 {% endblock scripts %}

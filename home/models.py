@@ -18,8 +18,6 @@ class Kub(models.Model):
 
 class Province(models.Model):
     name = models.CharField(max_length=100)
-    latitude = models.FloatField(default=None, blank=True, null=True)
-    longitude = models.FloatField(default=None, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -28,6 +26,9 @@ class ClusterModel(models.Model):
     province = models.ForeignKey(Province, on_delete=models.CASCADE)
     year = models.IntegerField()
     cluster = models.IntegerField()
+    toleransi = models.FloatField(null=True)
+    kesetaraan = models.FloatField(null=True)
+    kerjasama = models.FloatField(null=True)
 
     def __str__(self):
         return f"{self.province.name} - {self.year}: Cluster {self.cluster}"
